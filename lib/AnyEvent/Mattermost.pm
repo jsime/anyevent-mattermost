@@ -170,6 +170,27 @@ sub start {
     });
 }
 
+=head2 stop
+
+    $mconn->stop();
+
+Closes connection with Mattermost server and ceases processing messages.
+Callbacks which have been registered are left in place in case you wish to
+start() the connection again.
+
+If you wish to remove callbacks, without disposing of the AnyEvent::Mattermost
+object itself, you will need to call on() and pass C<undef> for each events'
+callback value (rather than the anonymous subroutines you had provided when
+registering them).
+
+=cut
+
+sub stop {
+    my ($self) = @_;
+
+    $self->{'conn'}->close;
+}
+
 =head2 on
 
     $mconn->on( $event1 => sub {}, [ $event2 => sub {}, ... ] );
