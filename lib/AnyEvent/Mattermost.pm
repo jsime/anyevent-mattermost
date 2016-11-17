@@ -239,7 +239,11 @@ The C<\%message> hash reference should contain at bare minimum two keys:
 
 =item * channel
 
-The name of the channel to which the message should be posted.
+The name of the channel to which the message should be posted. This may be
+either the short name (which appears in URLs in the web UI) or the display
+name (which may contain spaces). In the case of conflicts, the display name
+takes precedence, on the theory that it is the most enduser-visible name of
+channels and thus the least surprising.
 
 =item * message
 
@@ -249,8 +253,8 @@ among other things.
 
 =back
 
-To announce your presence to the default Mattermost channel (Town Square), you
-might call the method like this:
+To announce your presence to the default Mattermost channel (Town Square, using
+its short name), you might call the method like this:
 
     $mconn->send({ channel => "town-square", message => "Hey everybody!" });
 
@@ -395,6 +399,7 @@ sub _get_channel_id {
                 && exists $channel->{'id'} && exists $channel->{'name'};
 
             $self->{'channels'}{$channel->{'name'}} = $channel->{'id'};
+            $self->{'channels'}{$channel->{'display_name'}} = $channel->{'id'};
         }
 
         # Ensure that we got the channel we were looking for.
