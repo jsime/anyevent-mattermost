@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package AnyEvent::Mattermost;
 
-# ABSTRACT: AnyEvent module for interacting with Mattermost websockets API.
+# ABSTRACT: AnyEvent module for interacting with Mattermost APIs
 
 =pod
 
@@ -10,14 +10,13 @@ package AnyEvent::Mattermost;
 
 =head1 NAME
 
-AnyEvent::Mattermost - AnyEvent module for interacting with the Mattermost Web Service API
+AnyEvent::Mattermost - AnyEvent module for interacting with the Mattermost APIs
 
 =cut
 
 use AnyEvent;
 use AnyEvent::WebSocket::Client 0.37;
 use Carp;
-use Data::Dumper;
 use Furl;
 use JSON;
 use Time::HiRes qw( time );
@@ -36,9 +35,9 @@ use Try::Tiny;
     my $cond = AnyEvent->condvar;
     my $mconn = AnyEvent::Mattermost->new($host, $team, $user, $pass);
 
-    $mconn->on('message' => sub {
+    $mconn->on('posted' => sub {
         my ($self, $message) = @_;
-        print "> $message->{text}\n";
+        printf "<%s> %s\n", $message->{data}{sender_name}, $message->{data}{post}";
     });
 
     $mconn->start;
@@ -62,6 +61,26 @@ to support all the stable Mattermost API features. Baby steps.
 =cut
 
 =head2 new
+
+    new( $host, $team, $email, $password )
+
+Creates a new AnyEvent::Mattermost object. No connections are opened and no
+callbacks are registered yet.
+
+The C<$host> parameter must be the HTTP/HTTPS URL of your Mattermost server. If
+you omit the scheme and provide only a hostname, HTTPS will be assumed. Note
+that Mattermost servers configured over HTTP will also use unencrypted C<ws://>
+for the persistent WebSockets connection for receiving incoming messages. You
+should use HTTPS unless there is no other choice.
+
+C<$team> must be the Mattermost team's short name (the version which appears in
+the URLs when connected through the web client).
+
+C<$email> must be the email address of the account to be used for logging into
+the Mattermost server. The short username is not supported for logins via the
+Mattermost APIs, only the email address.
+
+C<$password> is hopefully self-explanatory.
 
 =cut
 
@@ -90,6 +109,14 @@ sub new {
 }
 
 =head2 start
+
+    start()
+
+Opens the connection to the Mattermost server, authenticates the previously
+provided account credentials and performs an initial data request for user,
+team, and channel information.
+
+Any errors encountered will croak() and the connection will be aborted.
 
 =cut
 
@@ -138,10 +165,51 @@ sub start {
 
         $self->{'started'}++;
         $self->{'conn'} = $conn;
+
+        $conn->on(each_message => sub { $self->_handle_incoming(@_) });
     });
 }
 
+=head2 on
+
+    on( $event1 => sub {}, [ $event2 => sub {}, ... ] )
+
+Registers a callback for the named event type. Multiple events may be registered
+in a single call to on(), but only one callback may exist for any given event
+type. Any subsequent callbacks registered to an existing event handler will
+overwrite the previous callback.
+
+Every callback will receive two arguments: the AnyEvent::Mattermost object and
+the raw message data received over the Mattermost WebSockets connection. This
+message payload will take different forms depending on the type of event which
+occurred, but the top-level data structure is always a hash reference with at
+least the key C<event> (with a value matching that which you used to register
+the callback). Most event types include a C<data> key, whose value is a hash
+reference containing the payload of the event. For channel messages this will
+include things like the sender's name, the channel name and type, and of course
+the message itself.
+
+For more explanation of event types, hope that the Mattermost project documents
+them at some point. For now, L<Data::Dumper> based callbacks are your best bet.
+
+=cut
+
+sub on {
+    my ($self, %registrations) = @_;
+
+    foreach my $type (keys %registrations) {
+        my $cb = $registrations{$type};
+        $self->{'registry'}{$type} = $cb;
+    }
+}
+
 =head2 ping
+
+    ping()
+
+Pings the Mattermost server over the WebSocket connection to maintain online
+status and ensure the connection remains alive. You should not have to call
+this method yourself, as start() sets up a ping callback on a timer for you.
 
 =cut
 
@@ -152,6 +220,34 @@ sub ping {
 }
 
 =head2 send
+
+    send( \%message )
+
+Posts a message to the Mattermost server. This method is currently fairly
+limited and supports only providing a channel name and a message body. There
+are formatting, attachment, and other features that are planned to be
+supported in future releases.
+
+The C<\%message> hash reference should contain at bare minimum two keys:
+
+=over 4
+
+=item * channel
+
+The name of the channel to which the message should be posted.
+
+=item * message
+
+The body of the message to be posted. This may include any markup options that
+are supported by Mattermost, which includes a subset of the Markdown language
+among other things.
+
+=back
+
+To announce your presence to the default Mattermost channel (Town Square), you
+might call the method like this:
+
+    send({ channel => "town-square", message => "Hey everybody!" })
 
 =cut
 
@@ -195,6 +291,11 @@ stable between versions. However, if you're the adventurous type ...
 
 =head2 started
 
+    started()
+
+Returns a boolean status indicating whether the Mattermost WebSockets API
+connection has started yet.
+
 =cut
 
 sub started {
@@ -204,6 +305,33 @@ sub started {
 }
 
 
+
+sub _do {
+    my ($self, $type, @args) = @_;
+
+    if (defined $self->{'registry'}{$type}) {
+        $self->{'registry'}{$type}->($self, @args);
+    }
+}
+
+sub _handle_incoming {
+    my ($self, $conn, $raw) = @_;
+
+    my $msg = try {
+        decode_json($raw->body);
+    }
+    catch {
+        my $message = $raw->body;
+        croak "unable to decode incoming message: $message";
+    };
+
+    if ($msg->{'event'} eq 'hello') {
+        $self->{'hello'}++;
+        $self->_do($msg->{'event'}, $msg);
+    } else {
+        $self->_do($msg->{'event'}, $msg);
+    }
+}
 
 sub _get_channel_id {
     my ($self, $channel_name) = @_;
@@ -293,6 +421,21 @@ sub _headers {
 
     return $headers;
 }
+
+=head1 LIMITATIONS
+
+=over 4
+
+=item * Only basic message sending and receiving is currently supported.
+
+=back
+
+=head1 CONTRIBUTING
+
+If you would like to contribute to this module, report bugs, or request new
+features, please visit the module's official GitHub project:
+
+L<https://github.com/jsime/anyevent-mattermost>
 
 =head1 AUTHOR
 
