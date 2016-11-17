@@ -203,22 +203,6 @@ sub on {
     }
 }
 
-=head2 ping
-
-    $mconn->ping();
-
-Pings the Mattermost server over the WebSocket connection to maintain online
-status and ensure the connection remains alive. You should not have to call
-this method yourself, as start() sets up a ping callback on a timer for you.
-
-=cut
-
-sub ping {
-    my ($self) = @_;
-
-    $self->{'conn'}->send("ping");
-}
-
 =head2 send
 
     $mconn->send( \%message );
@@ -288,6 +272,22 @@ and their signatures (even their very existence) are not guaranteed to remain
 stable between versions. However, if you're the adventurous type ...
 
 =cut
+
+=head2 ping
+
+    $mconn->ping();
+
+Pings the Mattermost server over the WebSocket connection to maintain online
+status and ensure the connection remains alive. You should not have to call
+this method yourself, as start() sets up a ping callback on a timer for you.
+
+=cut
+
+sub ping {
+    my ($self) = @_;
+
+    $self->{'conn'}->send("ping");
+}
 
 =head2 started
 

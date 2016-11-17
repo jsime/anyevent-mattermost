@@ -92,14 +92,6 @@ the message itself.
 For more explanation of event types, hope that the Mattermost project documents
 them at some point. For now, [Data::Dumper](https://metacpan.org/pod/Data::Dumper) based callbacks are your best bet.
 
-## ping
-
-    $mconn->ping();
-
-Pings the Mattermost server over the WebSocket connection to maintain online
-status and ensure the connection remains alive. You should not have to call
-this method yourself, as start() sets up a ping callback on a timer for you.
-
 ## send
 
     $mconn->send( \%message );
@@ -131,6 +123,14 @@ might call the method like this:
 The following methods are not intended to be used by code outside this module,
 and their signatures (even their very existence) are not guaranteed to remain
 stable between versions. However, if you're the adventurous type ...
+
+## ping
+
+    $mconn->ping();
+
+Pings the Mattermost server over the WebSocket connection to maintain online
+status and ensure the connection remains alive. You should not have to call
+this method yourself, as start() sets up a ping callback on a timer for you.
 
 ## started
 
