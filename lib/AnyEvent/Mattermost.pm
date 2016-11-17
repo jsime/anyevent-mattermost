@@ -304,7 +304,33 @@ sub started {
     return $self->{'started'} // 0;
 }
 
+=head1 LIMITATIONS
 
+=over 4
+
+=item * Only basic message sending and receiving is currently supported.
+
+=back
+
+=head1 CONTRIBUTING
+
+If you would like to contribute to this module, report bugs, or request new
+features, please visit the module's official GitHub project:
+
+L<https://github.com/jsime/anyevent-mattermost>
+
+=head1 AUTHOR
+
+Jon Sime <jonsime@gmail.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2016 by Jon Sime.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
 
 sub _do {
     my ($self, $type, @args) = @_;
@@ -421,33 +447,5 @@ sub _headers {
 
     return $headers;
 }
-
-=head1 LIMITATIONS
-
-=over 4
-
-=item * Only basic message sending and receiving is currently supported.
-
-=back
-
-=head1 CONTRIBUTING
-
-If you would like to contribute to this module, report bugs, or request new
-features, please visit the module's official GitHub project:
-
-L<https://github.com/jsime/anyevent-mattermost>
-
-=head1 AUTHOR
-
-Jon Sime <jonsime@gmail.com>
-
-=head1 COPYRIGHT AND LICENSE
-
-This software is copyright (c) 2016 by Jon Sime.
-
-This is free software; you can redistribute it and/or modify it under
-the same terms as the Perl 5 programming language system itself.
-
-=cut
 
 1;
