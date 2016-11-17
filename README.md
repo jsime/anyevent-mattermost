@@ -118,7 +118,11 @@ The `\%message` hash reference should contain at bare minimum two keys:
 
 - channel
 
-    The name of the channel to which the message should be posted.
+    The name of the channel to which the message should be posted. This may be
+    either the short name (which appears in URLs in the web UI) or the display
+    name (which may contain spaces). In the case of conflicts, the display name
+    takes precedence, on the theory that it is the most enduser-visible name of
+    channels and thus the least surprising.
 
 - message
 
@@ -126,8 +130,8 @@ The `\%message` hash reference should contain at bare minimum two keys:
     are supported by Mattermost, which includes a subset of the Markdown language
     among other things.
 
-To announce your presence to the default Mattermost channel (Town Square), you
-might call the method like this:
+To announce your presence to the default Mattermost channel (Town Square, using
+its short name), you might call the method like this:
 
     $mconn->send({ channel => "town-square", message => "Hey everybody!" });
 
