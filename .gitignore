@@ -21,5 +21,6 @@ pm_to_blib
 Session.vim
 .netrwhist
 *~
+AnyEvent-Mattermost-*/*
 AnyEvent-Mattermost-*.tar.gz
 Makefile.PL
