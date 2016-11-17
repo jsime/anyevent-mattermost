@@ -40,7 +40,7 @@ to support all the stable Mattermost API features. Baby steps.
 
 ## new
 
-    new( $host, $team, $email, $password )
+    $mconn = AnyEvent::Mattermost->new( $host, $team, $email, $password );
 
 Creates a new AnyEvent::Mattermost object. No connections are opened and no
 callbacks are registered yet.
@@ -62,7 +62,7 @@ Mattermost APIs, only the email address.
 
 ## start
 
-    start()
+    $mconn->start();
 
 Opens the connection to the Mattermost server, authenticates the previously
 provided account credentials and performs an initial data request for user,
@@ -72,7 +72,7 @@ Any errors encountered will croak() and the connection will be aborted.
 
 ## on
 
-    on( $event1 => sub {}, [ $event2 => sub {}, ... ] )
+    $mconn->on( $event1 => sub {}, [ $event2 => sub {}, ... ] );
 
 Registers a callback for the named event type. Multiple events may be registered
 in a single call to on(), but only one callback may exist for any given event
@@ -94,7 +94,7 @@ them at some point. For now, [Data::Dumper](https://metacpan.org/pod/Data::Dumpe
 
 ## ping
 
-    ping()
+    $mconn->ping();
 
 Pings the Mattermost server over the WebSocket connection to maintain online
 status and ensure the connection remains alive. You should not have to call
@@ -102,7 +102,7 @@ this method yourself, as start() sets up a ping callback on a timer for you.
 
 ## send
 
-    send( \%message )
+    $mconn->send( \%message );
 
 Posts a message to the Mattermost server. This method is currently fairly
 limited and supports only providing a channel name and a message body. There
@@ -124,7 +124,7 @@ The `\%message` hash reference should contain at bare minimum two keys:
 To announce your presence to the default Mattermost channel (Town Square), you
 might call the method like this:
 
-    send({ channel => "town-square", message => "Hey everybody!" })
+    $mconn->send({ channel => "town-square", message => "Hey everybody!" });
 
 # INTERNAL METHODS
 
@@ -134,7 +134,7 @@ stable between versions. However, if you're the adventurous type ...
 
 ## started
 
-    started()
+    $mconn->started();
 
 Returns a boolean status indicating whether the Mattermost WebSockets API
 connection has started yet.
