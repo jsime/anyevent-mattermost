@@ -9,7 +9,7 @@ AnyEvent::Mattermost - AnyEvent module for interacting with the Mattermost APIs
 
     my $host = "https://mattermost.example.com/";
     my $team = "awesome-chat";
-    my $user = "janedoe@example.com";
+    my $user = "janedoe\@example.com";
     my $pass = "foobar123";
 
     my $cond = AnyEvent->condvar;
