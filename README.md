@@ -9,7 +9,7 @@ AnyEvent::Mattermost - AnyEvent module for interacting with the Mattermost APIs
 
     my $host = "https://mattermost.example.com/";
     my $team = "awesome-chat";
-    my $user = "janedoe@example.com";
+    my $user = "janedoe\@example.com";
     my $pass = "foobar123";
 
     my $cond = AnyEvent->condvar;
@@ -17,7 +17,7 @@ AnyEvent::Mattermost - AnyEvent module for interacting with the Mattermost APIs
 
     $mconn->on('posted' => sub {
         my ($self, $message) = @_;
-        printf "<%s> %s\n", $message->{data}{sender_name}, $message->{data}{post}";
+        printf "<%s> %s\n", $message->{data}{sender_name}, $message->{data}{post};
     });
 
     $mconn->start;
